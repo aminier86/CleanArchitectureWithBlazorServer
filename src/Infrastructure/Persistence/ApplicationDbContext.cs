@@ -27,13 +27,22 @@ public class ApplicationDbContext : IdentityDbContext<
     public DbSet<PicklistSet> PicklistSets { get; set; }
     public DbSet<Product> Products { get; set; }
     public DbSet<Contact> Contacts { get; set; }
+
+    //Mis entidades
+    public DbSet<TenantsIdentidad> TenantsIdentidades { get; set; }
+    public DbSet<Ejemplo> Ejemplos { get; set; }
+    public DbSet<Departamento> Departamentos { get; set; }
+
+
+
+
     public DbSet<LoginAudit> LoginAudits { get; set; }
     public DbSet<UserLoginRiskSummary> UserLoginRiskSummaries { get; set; }
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        
+
         base.OnModelCreating(builder);
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         builder.ApplyGlobalFilters<ISoftDelete>(s => s.DeletedAt == null);

@@ -1,0 +1,131 @@
+﻿@using CleanArchitecture.Blazor.Application.Features.Departamentos.Commands.AddEdit
+@using CleanArchitecture.Blazor.Application.Features.Tenants.DTOs
+@using CleanArchitecture.Blazor.Infrastructure.Services.Identity
+
+@inherits MudComponentBase
+@inject IValidationService Validator
+@inject IStringLocalizer<Departamentos> L
+
+<MudDialog>
+    <DialogContent>
+        <MudForm Model="@_model" @ref="@_departamentoForm" Validation="@(Validator.ValidateValue(_model))">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField Label="@L[_model.GetMemberDescription(x => x.Nombre)]" @bind-Value="_model.Nombre" For="@(() => _model.Nombre)" Required="false" RequiredError="@L["nombre is required!"]"></MudTextField>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField Label="@L[_model.GetMemberDescription(x => x.Descripcion)]" @bind-Value="_model.Descripcion" For="@(() => _model.Descripcion)" Required="false" RequiredError="@L["descripcion is required!"]"></MudTextField>
+                </MudItem>
+                
+                <MudItem sm="6" xs="12">
+                    <MultiTenantAutocomplete @bind-Value="_model.Tenant"
+                                             T="TenantDto"
+                                             Label="@L["Empresa"]"
+                                             Required="true"
+                                             Clearable="true"
+                                             Validation="@(new Func<string, IEnumerable<string>>(ValidateTenant))"
+                                             For="@(() => _model.Tenant)" />
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <PickUserAutocomplete For="@(() => _model.Encargado)"
+                                          Label="@L[_model.GetMemberDescription(x=>x.EncargadoId)]"
+                                          @bind-Value="_model.Encargado"
+                                          TenantId="@_model.Tenant?.Id"
+                                          T="ApplicationUserDto"
+                                          Clearable="true"
+                                          Disabled="@(_model.Tenant is null)" />
+                </MudItem>
+
+              
+
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@ConstantString.Cancel</MudButton>
+        <MudLoadingButton Loading="@_savingnew" OnClick="OnSaveAndNew">@ConstantString.SaveAndNew</MudLoadingButton>
+        <MudLoadingButton Loading="@_saving" OnClick="OnSubmit">@ConstantString.Save</MudLoadingButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    MudForm _departamentoForm = new();
+    private bool _saving = false;
+    private bool _savingnew = false;
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; } = default!;
+    [EditorRequired][Parameter] public AddEditDepartamentoCommand _model { get; set; } = null!;
+    [EditorRequired][Parameter] public ApplicationUserDto Model { get; set; } = default!;
+
+  
+
+   
+
+    async Task OnSubmit()
+    {
+        try
+        {
+            _saving = true;
+            await _departamentoForm.Validate().ConfigureAwait(false);
+            if (!_departamentoForm.IsValid)
+                return;
+            var result = await Mediator.Send(_model);
+            result.Match(data =>
+            {
+                MudDialog.Close(DialogResult.Ok(true));
+                Snackbar.Add(ConstantString.SaveSuccess, MudBlazor.Severity.Info);
+            }, errors =>
+            {
+                Snackbar.Add(errors, MudBlazor.Severity.Error);
+            });
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+    async Task OnSaveAndNew()
+    {
+        try
+        {
+            _savingnew = true;
+            await _departamentoForm.Validate().ConfigureAwait(false);
+            if (!_departamentoForm.IsValid)
+                return;
+            var result = await Mediator.Send(_model);
+            await result.MatchAsync(async data =>
+            {
+                Snackbar.Add(ConstantString.SaveSuccess, MudBlazor.Severity.Info);
+                await Task.Delay(300);
+                _model = new AddEditDepartamentoCommand() { };
+            }, errors =>
+            {
+                Snackbar.Add(errors, MudBlazor.Severity.Error);
+                return Task.CompletedTask;
+            });
+        }
+        finally
+        {
+            _savingnew = false;
+        }
+    }
+    void Cancel() => MudDialog.Cancel();
+
+    private void OnTenantChanged(TenantDto? selectedTenant)
+    {
+        _model.Tenant = selectedTenant;
+        _model.TenantId = selectedTenant?.Id;
+        StateHasChanged();
+    }
+
+   
+
+    private IEnumerable<string> ValidateTenant(string tenantId)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId))
+            yield return L["Tenant selection is required"];
+    }
+
+
+}

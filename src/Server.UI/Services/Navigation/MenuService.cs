@@ -9,7 +9,7 @@ public class MenuService : IMenuService
     {
         new MenuSectionModel
         {
-            Title = "Application",
+            //Title = "Application",
             SectionItems = new List<MenuSectionItemModel>
             {
                 new() { Title = "Home", Icon = Icons.Material.Filled.Home, Href = "/" },
@@ -38,38 +38,27 @@ public class MenuService : IMenuService
                             Title = "Contacts",
                             Href = "/pages/contacts",
                             PageStatus = PageStatus.Completed
+                        },
+                        new()
+                        {
+                            Title = "Ejemplo",
+                            Href = "/pages/ejemplos",
+                            PageStatus = PageStatus.Completed
+                        },
+                        new()
+                        {
+                            Title = "Departamentos",
+                            Href = "/pages/departamentos",
+                            PageStatus = PageStatus.Completed
                         }
                     }
                 },
-                new()
-                {
-                    Title = "Analytics",
-                    Roles = new[] { Roles.Admin, Roles.Users },
-                    Icon = Icons.Material.Filled.Analytics,
-                    Href = "/analytics",
-                    PageStatus = PageStatus.ComingSoon
-                },
-                new()
-                {
-                    Title = "Banking",
-                    Roles = new[] { Roles.Admin, Roles.Users },
-                    Icon = Icons.Material.Filled.Money,
-                    Href = "/banking",
-                    PageStatus = PageStatus.ComingSoon
-                },
-                new()
-                {
-                    Title = "Booking",
-                    Roles = new[] { Roles.Admin, Roles.Users },
-                    Icon = Icons.Material.Filled.CalendarToday,
-                    Href = "/booking",
-                    PageStatus = PageStatus.ComingSoon
-                }
+
             }
         },
         new MenuSectionModel
         {
-            Title = "MANAGEMENT",
+            Title = "ADMINSITRACION",
             Roles = new[] { Roles.Admin },
             SectionItems = new List<MenuSectionItemModel>
             {
@@ -80,12 +69,7 @@ public class MenuService : IMenuService
                     Icon = Icons.Material.Filled.ManageAccounts,
                     MenuItems = new List<MenuSectionSubItemModel>
                     {
-                        new()
-                        {
-                            Title = "Multi-Tenant",
-                            Href = "/system/tenants",
-                            PageStatus = PageStatus.Completed
-                        },
+
                         new()
                         {
                             Title = "Users",
@@ -108,6 +92,18 @@ public class MenuService : IMenuService
                         {
                             Title = "Login History",
                             Href = "/pages/identity/loginaudits",
+                            PageStatus = PageStatus.Completed
+                        },
+                        new()
+                        {
+                            Title = "Empresas",
+                            Href = "/system/tenants",
+                            PageStatus = PageStatus.Completed
+                        },
+                        new()
+                        {
+                            Title = "Empresas Identidades",
+                            Href = "/pages/tenantidentidades",
                             PageStatus = PageStatus.Completed
                         },
                     }

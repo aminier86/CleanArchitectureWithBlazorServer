@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace CleanArchitecture.Blazor.Application.Common.Interfaces;
 
-public interface IApplicationDbContext: IAsyncDisposable
+public interface IApplicationDbContext : IAsyncDisposable
 {
     DbSet<SystemLog> SystemLogs { get; set; }
     DbSet<AuditTrail> AuditTrails { get; set; }
@@ -17,6 +17,15 @@ public interface IApplicationDbContext: IAsyncDisposable
     DbSet<Product> Products { get; set; }
     DbSet<Tenant> Tenants { get; set; }
     DbSet<Contact> Contacts { get; set; }
+
+    //Mis Entidades
+    DbSet<TenantsIdentidad> TenantsIdentidades { get; set; }
+    DbSet<Ejemplo> Ejemplos { get; set; }
+    DbSet<Departamento> Departamentos { get; set; }
+
+
+
+
     DbSet<LoginAudit> LoginAudits { get; set; }
     DbSet<UserLoginRiskSummary> UserLoginRiskSummaries { get; set; }
     ChangeTracker ChangeTracker { get; }

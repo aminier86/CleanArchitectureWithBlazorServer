@@ -1,0 +1,125 @@
+﻿@page "/pages/departamentos/edit/{id:int}"
+@using CleanArchitecture.Blazor.Application.Features.Departamentos.Commands.Update
+@using CleanArchitecture.Blazor.Application.Features.Departamentos.Queries.GetById
+@using CleanArchitecture.Blazor.Server.UI.Components.Sessions
+@using CleanArchitecture.Blazor.Application.Features.Tenants.DTOs
+@using CleanArchitecture.Blazor.Infrastructure.Services.Identity
+
+@inherits MudComponentBase
+@inject IValidationService Validator
+@inject IStringLocalizer<Departamentos> L
+@attribute [Authorize(Policy = Permissions.Departamentos.Edit)]
+
+<PageTitle>@Title</PageTitle>
+<Breadcrumbs OnSaveButtonClick="OnSubmit" Saving="_saving" BreadcrumbItems="_breadcrumbItems"></Breadcrumbs>
+<MudContainer Class="mt-3" MaxWidth="MaxWidth.Large">
+    @if (_model != null)
+    {
+        <MudCard Class="pa-2">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">@Title</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <ActiveUserSession PageComponent="@($"{nameof(EditDepartamento)}/{_model.Id}")" />
+                <MudForm Model="@_model" @ref="@_departamentoForm" Validation="@(Validator.ValidateValue(_model))">
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" md="6">
+                            <MudTextField Label="@L[_model.GetMemberDescription(x => x.Nombre)]" @bind-Value="_model.Nombre" For="@(() => _model.Nombre)" Required="false" RequiredError="@L["nombre is required!"]"></MudTextField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField Label="@L[_model.GetMemberDescription(x => x.Descripcion)]" @bind-Value="_model.Descripcion" For="@(() => _model.Descripcion)" Required="false" RequiredError="@L["descripcion is required!"]"></MudTextField>
+                        </MudItem>
+                        <MudItem sm="6" xs="12">
+                            <MultiTenantAutocomplete @bind-Value="_model.Tenant"
+                                                     T="TenantDto"
+                                                     Label="@L["Empresa"]"
+                                                     Required="true"
+                                                     Clearable="true"
+                                                     Validation="@(new Func<string, IEnumerable<string>>(ValidateTenant))"
+                                                     For="@(() => _model.Tenant)" />
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <PickUserAutocomplete For="@(() => _model.Encargado)"
+                                                  Label="@L[_model.GetMemberDescription(x=>x.EncargadoId)]"
+                                                  @bind-Value="_model.Encargado"
+                                                  TenantId="@_model.Tenant?.Id"
+                                                  T="ApplicationUserDto"
+                                                  Clearable="true"
+                                                  Disabled="@(_model.Tenant is null)" />
+                        </MudItem>
+
+                    </MudGrid>
+                </MudForm>
+            </MudCardContent>
+            <MudCardActions Class="d-flex justify-end gap-2">
+                <MudLoadingButton Color="Color.Primary" DropShadow="false" Loading="@_saving" OnClick="OnSubmit">@ConstantString.Save</MudLoadingButton>
+            </MudCardActions>
+        </MudCard>
+    }
+</MudContainer>
+
+
+@code {
+    public string? Title { get; private set; }
+    [Parameter]
+    public int Id { get; set; }
+    MudForm _departamentoForm = new();
+    private bool _saving = false;
+    private List<BreadcrumbItem>? _breadcrumbItems;
+    private UpdateDepartamentoCommand? _model;
+    protected override async Task OnInitializedAsync()
+    {
+        Title = L["Edit Departamento"];
+        _breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem(L["Home"], href: "/"),
+            new BreadcrumbItem(L["Departamentos"], href: "/pages/departamentos")
+        };
+        var result = await Mediator.Send(new GetDepartamentoByIdQuery() { Id = Id });
+        result.Map(data =>
+        {
+            _model = Mapper.Map<UpdateDepartamentoCommand>(data);
+            return data;
+        }).Match(data =>
+        {
+            _breadcrumbItems.Add(new BreadcrumbItem(data.Nombre, href: $"/pages/departamentos/edit/{Id}"));
+        }, errors =>
+        {
+            Snackbar.Add($"{errors}", Severity.Error);
+        });
+
+    }
+    async Task OnSubmit()
+    {
+        try
+        {
+            _saving = true;
+            await _departamentoForm.Validate().ConfigureAwait(false);
+            if (!_departamentoForm.IsValid)
+                return;
+            var result = await Mediator.Send(_model);
+            result.Match(
+                data =>
+                {
+                    Snackbar.Add(ConstantString.SaveSuccess, MudBlazor.Severity.Info);
+                },
+                errors =>
+                {
+                    Snackbar.Add(errors, MudBlazor.Severity.Error);
+                });
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private IEnumerable<string> ValidateTenant(string tenantId)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId))
+            yield return L["Tenant selection is required"];
+    }
+}
